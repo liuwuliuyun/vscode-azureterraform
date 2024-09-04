@@ -8,6 +8,7 @@
 import * as _ from "lodash";
 import * as vscode from "vscode";
 import * as TelemetryWrapper from "vscode-extension-telemetry-wrapper";
+import { copilotRequestHandler } from './copilotRequestHandler';
 import { TerraformCommand } from "./shared";
 import { TestOption } from "./shared";
 import { terraformShellManager } from "./terraformShellManager";
@@ -22,6 +23,9 @@ export async function activate(ctx: vscode.ExtensionContext) {
     await checkTerraformInstalled();
     await TelemetryWrapper.initializeFromJsonFile(ctx.asAbsolutePath("./package.json"));
     initFileWatcher(ctx);
+
+    const chatParticipant = vscode.chat.createChatParticipant("tf.copilot", copilotRequestHandler);
+    ctx.subscriptions.push(chatParticipant);
 
     ctx.subscriptions.push(TelemetryWrapper.instrumentOperationAsVsCodeCommand("azureTerraform.init", () => {
         terraformShellManager.getShell().runTerraformCmd(TerraformCommand.Init);
