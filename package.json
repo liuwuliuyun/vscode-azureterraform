@@ -158,6 +158,7 @@
         "vscode-test": "^1.6.1"
     },
     "dependencies": {
+        "@azure/identity": "^4.4.1",
         "azure-arm-resource": "^7.4.0",
         "azure-storage": "^2.10.7",
         "elegant-spinner": "3.0.0",

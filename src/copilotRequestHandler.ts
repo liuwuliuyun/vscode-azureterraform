@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
+import { AzureCliCredential } from '@azure/identity';
 
 const COPILOT_ENDPOINT = 'https://azclitools-copilot-apim-temp.azure-api.net/aztf/copilot';
+const copilotCredential = new AzureCliCredential();
 
 export async function copilotRequestHandler(
     request: vscode.ChatRequest,
@@ -9,6 +11,8 @@ export async function copilotRequestHandler(
     token: vscode.CancellationToken
 ): Promise<void> {
     try {
+        stream.progress('Retrieving Azure credentials...');
+        const COPILOT_AAD_TOKEN = (await copilotCredential.getToken('https://management.core.windows.net/')).token;
         stream.progress('TerraformAI is searching for the best documentation and code snippets for you...');
 
         const messages = {
@@ -19,13 +23,14 @@ export async function copilotRequestHandler(
         const chatResponse = await fetch(COPILOT_ENDPOINT, {
             method: 'POST',
             headers: {
+                'Authorization': `Bearer ` + COPILOT_AAD_TOKEN,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify(messages)
         });
 
         if (!chatResponse.ok) {
-            throw new Error(chatResponse.statusText);
+            throw new Error(await chatResponse.text());
         }
         stream.progress('TerraformAI is generating the answer for you...');
         const chatResponseReader = chatResponse.body?.getReader();
