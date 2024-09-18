@@ -16,7 +16,7 @@ export async function copilotRequestHandler(
         stream.progress('TerraformAI is searching for the best documentation and code snippets for you...');
 
         const messages = {
-            question: request.prompt,
+            question: 'Use Terraform to ' + request.prompt,
             streaming: true
         };
 
