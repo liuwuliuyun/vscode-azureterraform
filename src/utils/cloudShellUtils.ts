@@ -5,7 +5,6 @@
 
 "use strict";
 
-import * as request from "request-promise";
 import * as TelemetryWrapper from "vscode-extension-telemetry-wrapper";
 import { AzureSession, CloudShell } from "../azure-account.api";
 
@@ -74,42 +73,56 @@ async function acquireToken(session: AzureSession): Promise<IToken> {
 const consoleApiVersion = "2017-08-01-preview";
 async function getUserSettings(accessToken: string, armEndpoint: string): Promise<IUserSettings | undefined> {
     const targetUri = `${armEndpoint}/providers/Microsoft.Portal/userSettings/cloudconsole?api-version=${consoleApiVersion}`;
-    const response = await request({
-        uri: targetUri,
-        method: "GET",
-        headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
-        },
-        simple: false,
-        resolveWithFullResponse: true,
-        json: true,
-    });
+    try {
+        const response = await fetch(targetUri, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`,
+            },
+        });
 
-    if (response.statusCode < 200 || response.statusCode > 299) {
-        return;
+        if (!response.ok) {
+            TelemetryWrapper.sendError(new Error(`Failed to get user settings. Status code: ${response.status}`));
+            return;
+        }
+
+        const data: any = await response.json();
+        if (data && data.properties) {
+            return data.properties as IUserSettings;
+        } else {
+            TelemetryWrapper.sendError(new Error("Invalid user settings response"));
+        }
+    } catch (error) {
+        TelemetryWrapper.sendError(error);
     }
-
-    return response.body && response.body.properties;
 }
 
 async function getStorageAccountKey(accessToken: string, subscriptionId: string, resourceGroup: string, storageAccountName: string): Promise<string | undefined> {
-    const response = await request({
-        uri: `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/listKeys?api-version=2017-06-01`,
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`,
-        },
-        simple: false,
-        resolveWithFullResponse: true,
-        json: true,
-    });
+    const targetUri = `https://management.azure.com/subscriptions/${subscriptionId}/resourceGroups/${resourceGroup}/providers/Microsoft.Storage/storageAccounts/${storageAccountName}/listKeys?api-version=2017-06-01`;
+    try {
+        const response = await fetch(targetUri, {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${accessToken}`,
+            },
+        });
 
-    if (response.statusCode < 200 || response.statusCode > 299) {
-        return;
+        if (!response.ok) {
+            TelemetryWrapper.sendError(new Error(`Failed to get storage account key. Status code: ${response.status}`));
+            return;
+        }
+
+        const data: any = await response.json();
+        if (data && data.keys && data.keys.length > 0) {
+            return data.keys[0].value;
+        } else {
+            TelemetryWrapper.sendError(new Error("Invalid storage account key response"));
+        }
+    } catch (error) {
+        TelemetryWrapper.sendError(error);
     }
-
-    return response.body && response.body.keys && response.body.keys[0] && response.body.keys[0].value;
 }

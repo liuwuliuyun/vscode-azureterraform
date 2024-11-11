@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Event, Terminal } from 'vscode';
-import { ServiceClientCredentials } from 'ms-rest';
-import { AzureEnvironment } from 'ms-rest-azure';
-import { SubscriptionModels } from 'azure-arm-resource';
+import { ServiceClientCredentials } from '@azure/ms-rest-js';
+import { Environment } from '@azure/ms-rest-azure-env';
+import { Subscription } from '@azure/arm-resources-subscriptions';
 
 export type AzureLoginStatus = 'Initializing' | 'LoggingIn' | 'LoggedIn' | 'LoggedOut';
 
@@ -26,7 +26,7 @@ export interface AzureAccount {
 }
 
 export interface AzureSession {
-	readonly environment: AzureEnvironment;
+	readonly environment: Environment;
 	readonly userId: string;
 	readonly tenantId: string;
 	readonly credentials: ServiceClientCredentials;
@@ -34,7 +34,7 @@ export interface AzureSession {
 
 export interface AzureSubscription {
 	readonly session: AzureSession;
-	readonly subscription: SubscriptionModels.Subscription;
+	readonly subscription: Subscription;
 }
 
 export type AzureResourceFilter = AzureSubscription;

@@ -1,8 +1,10 @@
 import * as vscode from 'vscode';
-import { AzureCliCredential } from '@azure/identity';
+import { useIdentityPlugin, DefaultAzureCredential } from '@azure/identity';
+import { vsCodePlugin } from "@azure/identity-vscode";
+useIdentityPlugin(vsCodePlugin)
 
 const COPILOT_ENDPOINT = 'https://azclitools-copilot-apim-temp.azure-api.net/aztf/copilot';
-const copilotCredential = new AzureCliCredential();
+const copilotCredential = new DefaultAzureCredential();
 
 export async function copilotRequestHandler(
     request: vscode.ChatRequest,
